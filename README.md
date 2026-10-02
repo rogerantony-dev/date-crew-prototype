@@ -2,6 +2,8 @@
 
 A prototype for matchmakers. It checks every candidate against a client's stated preferences before a profile is shared, and it turns free-text rejection feedback into structured reasons with AI. The full write-up is in [ANSWERS.md](ANSWERS.md).
 
+**Live:** https://date-crew.vercel.app
+
 ## What it does
 
 - **Rule check before sharing.** Each client preference is a rule, either a dealbreaker or soft. Candidates come out as *clear*, *review* (breaks a soft preference) or *blocked* (breaks a dealbreaker, so "Share" is disabled). Each card names the rule the candidate breaks.

@@ -65,7 +65,10 @@ The AI never changes a preference by itself. Clients sometimes reject a profile 
 
 ## Part 3. Prototype
 
-A working "pre-share check" with mocked clients and profiles. See [README.md](README.md) to run it.
+A working "pre-share check" with mocked clients and profiles.
+
+- Live: https://date-crew.vercel.app
+- Code: https://github.com/rogerantony-dev/date-crew-prototype
 
 - It shows the funnel from the brief and highlights the biggest drop.
 - For each client, it lists candidates as clear, review or blocked, and names the preference each one breaks. Blocked profiles can't be shared.
