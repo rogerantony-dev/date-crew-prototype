@@ -7,7 +7,7 @@ A prototype for matchmakers. It checks every candidate against a client's stated
 ## What it does
 
 - **Rule check before sharing.** Each client preference is a rule, either a dealbreaker or soft. Candidates come out as *clear*, *review* (breaks a soft preference) or *blocked* (breaks a dealbreaker, so "Share" is disabled). Each card names the rule the candidate breaks.
-- **Structured rejection feedback.** "Log rejection" sends the client's feedback to Claude, which returns reasons as attribute + strength + quote. Code, not the model, then checks whether the rejected profile broke a preference we already had.
+- **Structured rejection feedback.** "Log rejection" sends the client's feedback to Gemini, which returns reasons as attribute + strength + quote. Code, not the model, then checks whether the rejected profile broke a preference we already had.
 - **Matchmaker approves every change.** A reason becomes a dealbreaker or soft rule with one click, and the tool shows which other candidates it now blocks. Reasons a rule can't check become notes. Vague feedback changes nothing and comes with a follow-up question.
 
 All data is mocked in `src/lib/data.ts`. State lives in the browser and resets on reload.
@@ -16,10 +16,8 @@ All data is mocked in `src/lib/data.ts`. State lives in the browser and resets o
 
 ```bash
 pnpm install
-# The feedback parser uses Vercel AI Gateway. Either:
-echo 'AI_GATEWAY_API_KEY=...' > .env.local
-# or link a Vercel project and pull an OIDC token:
-vercel link && vercel env pull
+# The feedback parser uses Gemini. Get a free key at https://aistudio.google.com/apikey
+echo 'GOOGLE_GENERATIVE_AI_API_KEY=...' > .env.local
 pnpm dev
 ```
 
@@ -30,7 +28,7 @@ The rule check works without a key. Only "Structure feedback with AI" needs one.
 | File | What it does |
 |---|---|
 | `src/lib/checker.ts` | Deterministic rule engine: evaluate, check, tighten a rule from a rejected profile |
-| `src/app/api/parse-feedback/route.ts` | Claude (`anthropic/claude-sonnet-5.5` via AI Gateway) with a Zod schema for structured output |
+| `src/app/api/parse-feedback/route.ts` | Gemini (`gemini-flash-latest`, free tier) with a Zod schema for structured output |
 | `src/components/workbench.tsx` | Client list, preferences, candidate queue |
 | `src/components/feedback-panel.tsx` | Feedback form, structured reasons, apply-rule actions, session metric |
 | `src/lib/data.ts` | Mock clients, profiles, funnel and sample feedback |

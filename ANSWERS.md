@@ -53,7 +53,7 @@ The AI never changes a preference by itself. Clients sometimes reject a profile 
 **Technology.**
 - An internal Next.js tool on Postgres. The "Share" action generates the email the team already sends, so the check sits in the path of every share instead of being an optional extra step.
 - The rule engine is plain TypeScript. It's deterministic, fast, testable and free, and checking "smoker vs never-smoker" doesn't need AI.
-- Claude (through Vercel AI Gateway) with schema-validated structured output, used only to read feedback. Each call costs a fraction of a rupee.
+- An LLM with schema-validated structured output, used only to read feedback. The prototype uses Gemini Flash on the free tier. In production, any small model works, at a fraction of a rupee per call.
 
 **Two-week plan.**
 - Week 1: preference schema and migration, rule engine with tests, a share flow that blocks dealbreakers, and the share log.
@@ -72,7 +72,7 @@ A working "pre-share check" with mocked clients and profiles.
 
 - It shows the funnel from the brief and highlights the biggest drop.
 - For each client, it lists candidates as clear, review or blocked, and names the preference each one breaks. Blocked profiles can't be shared.
-- Logging a rejection sends the feedback to Claude for structured reasons. The tool then labels each reason as "already in stated preferences", "stated preference didn't cover this" or "new preference".
+- Logging a rejection sends the feedback to Gemini for structured reasons. The tool then labels each reason as "already in stated preferences", "stated preference didn't cover this" or "new preference".
 - One click makes a reason a dealbreaker or soft rule. The tool then shows which other candidates the new rule blocks.
 - It tracks the % of logged rejections that broke a stated preference, which is the metric from Part 1.
 
@@ -94,6 +94,6 @@ A working "pre-share check" with mocked clients and profiles.
 
 > Draft. Rewrite in your own words, and replace the last line with something you actually disagreed with.
 
-- I used Claude Code to read the brief, check the funnel maths, build the Next.js prototype and draft these answers. Inside the prototype, Claude turns rejection feedback into structured reasons.
+- I used Claude Code to read the brief, check the funnel maths, build the Next.js prototype and draft these answers. Inside the prototype, Gemini turns rejection feedback into structured reasons.
 - I kept every preference check deterministic and every rule change human-approved, so the AI never decides on its own whether a profile breaks a preference.
 - One AI suggestion I disagreed with: _(fill in)_

@@ -1,10 +1,13 @@
+import { google } from "@ai-sdk/google";
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { CLIENTS, PROFILES } from "@/lib/data";
 import { describeRule, formatHeight } from "@/lib/checker";
 import { CHECKABLE_ATTRIBUTES, SOFT_ATTRIBUTES, type Rule } from "@/lib/types";
 
-const MODEL = "anthropic/claude-sonnet-5.5";
+// Free tier via Google AI Studio. Reads GOOGLE_GENERATIVE_AI_API_KEY.
+// The latest Flash is sometimes overloaded on the free tier, so fall back to a stable one.
+const MODELS = [google("gemini-flash-latest"), google("gemini-2.5-flash")];
 
 const feedbackSchema = z.object({
   reasons: z
@@ -69,33 +72,41 @@ export async function POST(req: Request) {
 
   const rules: Rule[] = parsed.data.rules ?? client.rules;
 
-  try {
-    const { output } = await generateText({
-      model: MODEL,
-      output: Output.object({ schema: feedbackSchema }),
-      system:
-        "You help matchmakers at an Indian matchmaking service turn a client's free-text rejection of a suggested profile into structured reasons. " +
-        "Only extract reasons the client actually gives; never invent reasons from the profile. " +
-        "Map each reason to the closest attribute. Use 'vague' when the client gives no specific, actionable reason (e.g. 'didn't feel it'). " +
-        "Clients often soften firm rules and overstate passing moods, so judge strength from the wording, not the topic.",
-      prompt: [
-        `Client stated preferences: ${rules.map((r) => `${r.attr}: ${describeRule(r)}${r.hard ? " (dealbreaker)" : ""}`).join("; ")}`,
-        `Rejected profile: ${profileSummary(profileId)}`,
-        `Client feedback: """${feedback}"""`,
-      ].join("\n\n"),
-    });
-    return Response.json(output);
-  } catch (error) {
-    console.error("parse-feedback failed", error);
-    const message = error instanceof Error ? error.message : String(error);
-    const notConfigured = /api key|oidc|unauthori[sz]ed|authentication/i.test(message);
-    return Response.json(
-      {
-        error: notConfigured
-          ? "AI Gateway is not configured. Set AI_GATEWAY_API_KEY in .env.local (or run `vercel link && vercel env pull`)."
-          : `AI call failed: ${message}`,
-      },
-      { status: notConfigured ? 503 : 502 },
-    );
+  const prompt = [
+    `Client stated preferences: ${rules.map((r) => `${r.attr}: ${describeRule(r)}${r.hard ? " (dealbreaker)" : ""}`).join("; ")}`,
+    `Rejected profile: ${profileSummary(profileId)}`,
+    `Client feedback: """${feedback}"""`,
+  ].join("\n\n");
+
+  let lastError: unknown;
+  for (const model of MODELS) {
+    try {
+      const { output } = await generateText({
+        model,
+        maxRetries: 1,
+        output: Output.object({ schema: feedbackSchema }),
+        system:
+          "You help matchmakers at an Indian matchmaking service turn a client's free-text rejection of a suggested profile into structured reasons. " +
+          "Only extract reasons the client actually gives; never invent reasons from the profile. " +
+          "Map each reason to the closest attribute. Use 'vague' when the client gives no specific, actionable reason (e.g. 'didn't feel it'). " +
+          "Clients often soften firm rules and overstate passing moods, so judge strength from the wording, not the topic.",
+        prompt,
+      });
+      return Response.json(output);
+    } catch (error) {
+      console.error(`parse-feedback failed on ${model.modelId}`, error);
+      lastError = error;
+    }
   }
+
+  const message = lastError instanceof Error ? lastError.message : String(lastError);
+  const notConfigured = /api key|unauthori[sz]ed|authentication/i.test(message);
+  return Response.json(
+    {
+      error: notConfigured
+        ? "Gemini is not configured. Set GOOGLE_GENERATIVE_AI_API_KEY in .env.local."
+        : `AI call failed: ${message}`,
+    },
+    { status: notConfigured ? 503 : 502 },
+  );
 }
