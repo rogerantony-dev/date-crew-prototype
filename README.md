@@ -21,14 +21,18 @@ echo 'GOOGLE_GENERATIVE_AI_API_KEY=...' > .env.local
 pnpm dev
 ```
 
-The rule check works without a key. Only "Structure feedback with AI" needs one.
+The rule check works without a key. Only "Structure feedback with AI" needs one. On Vercel, set the same variable under the project's environment variables.
+
+## Stack
+
+Next.js 16 (App Router) on Vercel, TypeScript, Tailwind CSS, Vercel AI SDK with Google Gemini Flash (free tier), and Zod.
 
 ## Code map
 
 | File | What it does |
 |---|---|
 | `src/lib/checker.ts` | Deterministic rule engine: evaluate, check, tighten a rule from a rejected profile |
-| `src/app/api/parse-feedback/route.ts` | Gemini (`gemini-flash-latest`, free tier) with a Zod schema for structured output |
+| `src/app/api/parse-feedback/route.ts` | Gemini via the Vercel AI SDK (`@ai-sdk/google`). Tries `gemini-flash-latest`, falls back to `gemini-2.5-flash`, and uses a Zod schema for structured output |
 | `src/components/workbench.tsx` | Client list, preferences, candidate queue |
 | `src/components/feedback-panel.tsx` | Feedback form, structured reasons, apply-rule actions, session metric |
 | `src/lib/data.ts` | Mock clients, profiles, funnel and sample feedback |

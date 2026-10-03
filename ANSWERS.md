@@ -39,7 +39,7 @@ Only 4.2% of shared profiles end in a completed meeting.
 
 1. Each client's preferences become structured rules, and each rule is either a **dealbreaker** or **soft**. We already collect these preferences, so this is mostly re-entering them as fields with a dealbreaker flag.
 2. Before sharing, every candidate goes through the rule check. A broken dealbreaker blocks the share. A broken soft preference flags it for review and shows the reason. Profiles that pass are ranked by how many preferences they meet, which also cuts search time.
-3. When a client rejects a profile, the matchmaker pastes their feedback. An LLM turns it into structured reasons (attribute, firm or soft, a verbatim quote). Code then checks whether the rejected profile broke a preference we already had.
+3. When a client rejects a profile, the matchmaker pastes their feedback. Gemini turns it into structured reasons (attribute, firm or soft, a verbatim quote). Code then checks whether the rejected profile broke a preference we already had.
 4. The matchmaker decides what changes. One click turns a reason into a dealbreaker or a soft preference. Reasons a rule can't check, like "travels 20 days a month", become notes on the client. Vague feedback changes nothing and comes with a follow-up question the matchmaker can ask the client.
 
 The AI never changes a preference by itself. Clients sometimes reject a profile and later accept a similar one, so automatic learning from every rejection would overfit. A human approves every change.
@@ -51,9 +51,9 @@ The AI never changes a preference by itself. Clients sometimes reject a profile 
 - Rejection feedback text, plus the structured reasons.
 
 **Technology.**
-- An internal Next.js tool on Postgres. The "Share" action generates the email the team already sends, so the check sits in the path of every share instead of being an optional extra step.
-- The rule engine is plain TypeScript. It's deterministic, fast, testable and free, and checking "smoker vs never-smoker" doesn't need AI.
-- An LLM with schema-validated structured output, used only to read feedback. The prototype uses Gemini Flash on the free tier. In production, any small model works, at a fraction of a rupee per call.
+- **App.** An internal Next.js tool hosted on Vercel, with Postgres for clients, profiles and the share log. The "Share" action generates the email the team already sends, so every share goes through the check.
+- **Rule engine.** Plain TypeScript. It's deterministic, fast, testable and free, and checking "smoker vs never-smoker" doesn't need AI.
+- **AI.** Google Gemini Flash, called through the Vercel AI SDK (`@ai-sdk/google`), used only to read rejection feedback. A Zod schema forces the reply into fixed fields: attribute, strength, quote and summary. Gemini's free tier covers a pilot. If the newest Flash model is overloaded, the app falls back to the stable `gemini-2.5-flash`. At production volume, Flash costs a fraction of a rupee per call.
 
 **Two-week plan.**
 - Week 1: preference schema and migration, rule engine with tests, a share flow that blocks dealbreakers, and the share log.
