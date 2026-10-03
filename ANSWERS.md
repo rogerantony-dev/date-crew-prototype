@@ -92,8 +92,6 @@ A working "pre-share check" with mocked clients and profiles.
 
 ## AI usage
 
-> Draft. Rewrite in your own words, and replace the last line with something you actually disagreed with.
-
-- I used Claude Code to read the brief, check the funnel maths, build the Next.js prototype and draft these answers. Inside the prototype, Gemini turns rejection feedback into structured reasons.
-- I kept every preference check deterministic and every rule change human-approved, so the AI never decides on its own whether a profile breaks a preference.
-- One AI suggestion I disagreed with: _(fill in)_
+- I used Claude Code as an assistant. It helped me check the funnel maths, write the Next.js prototype and tighten the wording of these answers. Inside the prototype, Gemini Flash turns rejection feedback into structured reasons.
+- I made the product and architecture decisions, using Claude to talk through the options. I chose to target preference-breaking shares rather than the later funnel stages, to keep the preference check as plain rules with no AI, to use the LLM only for reading feedback, and to have a matchmaker approve every rule change.
+- One suggestion I changed: Claude proposed running the feedback parser on Claude through Vercel AI Gateway. That required setting up billing on my Vercel account, so I switched it to Gemini's free tier. A prototype shouldn't need a paid account to demo, and the switch barely changed the code.
