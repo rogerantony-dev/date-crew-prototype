@@ -6,8 +6,10 @@ import { describeRule, formatHeight } from "@/lib/checker";
 import { CHECKABLE_ATTRIBUTES, SOFT_ATTRIBUTES, type Rule } from "@/lib/types";
 
 // Free tier via Google AI Studio. Reads GOOGLE_GENERATIVE_AI_API_KEY.
-// The latest Flash is sometimes overloaded on the free tier, so fall back to a stable one.
-const MODELS = [google("gemini-flash-latest"), google("gemini-2.5-flash")];
+// The latest Flash is often overloaded on the free tier, so try the stable one first.
+// Each attempt is capped so a slow model fails over instead of hanging the request.
+const MODELS = [google("gemini-2.5-flash"), google("gemini-flash-latest")];
+const MODEL_TIMEOUT_MS = 15_000;
 
 const feedbackSchema = z.object({
   reasons: z
@@ -84,6 +86,7 @@ export async function POST(req: Request) {
       const { output } = await generateText({
         model,
         maxRetries: 1,
+        timeout: MODEL_TIMEOUT_MS,
         output: Output.object({ schema: feedbackSchema }),
         system:
           "You help matchmakers at an Indian matchmaking service turn a client's free-text rejection of a suggested profile into structured reasons. " +
